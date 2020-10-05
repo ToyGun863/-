@@ -1,0 +1,193 @@
+#include<iostream>
+#include<math.h>
+#include<vector>
+#include<algorithm>
+using namespace std;
+
+
+//定义一个点(x,y)
+class Point
+{
+public:
+	double m_x;
+	double m_y;
+	Point(double x=0,double y=0)
+	{
+		m_x=x;
+		m_y=y;
+	}
+};
+
+
+//得到纵坐标最小的点，记作p_0
+int getTinyPoint(Point* pPoints,int number)
+{
+	int i,minId=0;
+	double minY = pPoints[0].m_y;
+	for(i=0;i<number;i++)
+	{
+		if(pPoints[i].m_y<minY)
+		{
+			minY = pPoints[i].m_y;
+			minId = i;
+		}
+	}
+
+	return minId;
+}
+
+//计算p_0与其他点连接成的直线的倾角的cos值
+void getCos(Point* pPoints,double* pCoss,int minId,int number)
+{
+	int i;
+	double coss;
+	for(i=0;i<number;i++)
+	{
+		if(i==minId)
+			pCoss[i]=10;//赋一个大于1的值，使该点经排序后位于最前面
+		else
+		{
+            coss = (pPoints[i].m_x - pPoints[minId].m_x) / sqrt((pPoints[i].m_x - pPoints[minId].m_x) * (pPoints[i].m_x - pPoints[minId].m_x) + (pPoints[i].m_y - pPoints[minId].m_y) * (pPoints[i].m_y - pPoints[minId].m_y));
+			pCoss[i] = coss;
+		}
+	}
+
+	return;
+}
+
+//根据cos值对数据点进行由大到小排序，cos0=1,cosPi=-1
+void sortPoints(Point* pPoints,double *pCoss,int number)
+{
+	int i,j;
+	double tempCos;
+	Point tempPoint;
+
+	//冒泡排序
+	for(i=0;i<number-1;i++)
+	{
+		for(j=0;j<number-1;j++)
+		{
+			if(pCoss[j]<pCoss[j+1])
+			{
+				//交换cos
+				tempCos = pCoss[j];
+				pCoss[j] = pCoss[j+1];
+				pCoss[j+1] = tempCos;
+
+				//交换数据点
+				tempPoint = pPoints[j];
+				pPoints[j] = pPoints[j+1];
+				pPoints[j+1] = tempPoint;
+			}
+		}
+	}
+
+	return;
+}
+
+
+//判断是否逆时针转动
+int ifAnticlockwise(Point a,Point b,Point c)
+{
+	//向量叉乘的几何意义是面积！
+	double area = (b.m_x-a.m_x)*(c.m_y-b.m_y)-(c.m_x-b.m_x)*(b.m_y-a.m_y);
+	if(area<0)
+		return -1;//顺时针
+	if(area==0)
+		return 0;//直
+	else
+		return 1;//逆时针
+}
+
+
+void getOutStack(Point* pPoints,int number)
+{
+	int i;
+	
+	//来一个堆栈
+	vector<Point> outPoints;
+	outPoints.push_back(pPoints[0]);
+	outPoints.push_back(pPoints[1]);
+
+	i=2;
+	while(true)
+	{
+		if(i==number)
+			break;
+		if(ifAnticlockwise(outPoints[outPoints.size()-2],outPoints[outPoints.size()-1],pPoints[i])>0)
+		{
+			outPoints.push_back(pPoints[i]);
+			i++;
+		}
+		else 
+			outPoints.pop_back();
+	}
+
+	//输出所有可行点
+	cout<<"构成凸包的点:"<<endl;
+	for(int k=0;k<outPoints.size();k++)
+	{
+		cout<<"("<<outPoints[k].m_x<<","<<outPoints[k].m_y<<")"<<endl;
+	}
+
+	return;
+}
+
+
+//调用上面写的函数 
+void solution(Point* pPoints,int number)
+{
+	double* pCoss=new double[number];
+	int minId = getTinyPoint(pPoints,number);
+	getCos(pPoints,pCoss,minId,number);
+	sortPoints(pPoints,pCoss,number);
+	getOutStack(pPoints,number);
+}
+
+
+int main()
+{
+
+	int number;
+	cout<<"点的个数:";
+	cin>>number;
+	Point * pPoints = new Point[number];
+	for(int i=0;i<number;i++)
+	{
+		cin>>pPoints[i].m_x;
+		cin>>pPoints[i].m_y;
+	}
+
+	solution(pPoints,number);
+
+	return 0;
+}
+
+//以下数据可供测试
+
+//点的个数：9
+//2 0
+//1 1
+//2 2
+//0 3
+//0 2
+//-2 0
+//-1 -1
+//0 -1
+//1 -2
+
+//结果：
+//1 -2
+//2 0
+//2 2
+//0 3
+//-2 0
+//-1 -1
+
+
+
+
+
+
+
+
