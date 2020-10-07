@@ -1,0 +1,191 @@
+#include<iostream>
+#include<malloc.h>
+using namespace std;
+//malloc与free对应
+//new与delete对应
+
+template<class T>
+class PriorityQueue
+{
+private:
+	int capacity = 100;//队列容量
+	int size;//队列大小
+	T* data;//数据
+
+public:
+	PriorityQueue();
+	~PriorityQueue();
+	
+	int getSize();
+	bool ifFull();//判满
+	bool ifEmpty();//判空
+	void push(T value);//入队
+	void pop();//出队
+	void clear();//清空
+	T top();//队首
+	void show();//用于测试的遍历 
+
+};
+
+
+template<class T>
+PriorityQueue<T>::PriorityQueue()
+{
+	data = (T*)malloc((capacity+1)*sizeof(T));
+	if(!data)
+	{
+		perror("Allocate dynamic memory");
+		return;
+	}
+
+	size = 0;
+}
+
+
+template<class T>
+PriorityQueue<T>::~PriorityQueue()
+{
+	while(!ifEmpty())
+		pop();
+	free(data);
+}
+
+//判空
+template<class T>
+bool PriorityQueue<T>::ifEmpty()
+{
+	if(size>0)
+		return false;
+	return true;
+}
+
+//清空
+template<class T>
+void PriorityQueue<T>::clear()
+{
+	free(data);
+	data = (T*)malloc((capacity+1)*sizeof(T));
+	return;
+}
+
+//判满
+template<class T>
+bool PriorityQueue<T>::ifFull()
+{
+    if (size == capacity)
+        return true;
+    return false;
+}
+
+//获取队列大小
+template<class T>
+int PriorityQueue<T>::getSize()
+{
+    return size;
+}
+
+template<class T>
+void PriorityQueue<T>::push(T value)
+{
+	//空则直接入队
+	if(ifEmpty())
+	{
+		data[size]=value;
+		size++;
+		return;
+	}
+
+	if(ifFull())
+	{
+		T* newData=(T*)malloc(2*(capacity+1)*sizeof(T));
+		capacity*=2;//扩容
+		for(int j=0;j<size;j++)
+			newData[j] = data[j];
+		free(data);
+		data = newData;
+	}
+
+	data[size] = value;
+	int i=size;
+	size++;
+	for(;data[i]>data[(i-1)/2];i=(i-1)/2)//最大堆 
+	{
+		T temp = data[i];
+		data[i] = data [(i-1)/2];
+		data[(i-1)/2] = temp;
+	}
+
+	return;
+}
+
+
+//出队
+template<class T>
+void PriorityQueue<T>::pop()
+{
+	
+	if(ifEmpty())
+    {
+        perror("Empty queue\n");
+        return;
+    }
+    int i = 0;
+    size--; 
+    data[0] = data[size];
+	while((data[i]<data[i*2+1]||data[i]<data[i*2+2])&&2*i+1<size)
+	{
+		int j;
+		if(data[2*i+1]>data[2*i+2])
+			j = 2*i+1;
+		else
+			j = 2*i+2;
+		T temp = data[i];
+		data[i] = data[j];
+		data[j] = temp;
+		i = j;
+	} 
+	
+	return;
+}
+
+
+//返回队首
+template<class T>
+T PriorityQueue<T>::top()
+{
+    if (ifEmpty())
+    {
+        perror("Priority queue is empty\n");
+        return data[0];
+    }
+    return data[0];
+}
+
+//仅用于测试的遍历
+template<class T>
+void PriorityQueue<T>::show()
+{
+	for(int i =0;i<size;++i)
+		cout<<data[i]<<" "<<i<<endl;
+	return;
+}
+
+int main()
+{
+	int test[] = {1,5,8,6,2,9,51,26,10,100,4};
+	PriorityQueue<int>* pq1= new PriorityQueue<int>();
+	for(int i =0;i<11;++i)
+		pq1->push(test[i]); 
+	
+	pq1->push(9);
+
+	cout<<pq1->top()<<endl;
+	pq1->pop();
+	
+	cout<<endl;
+	pq1->show();
+	cout<<endl;
+
+	
+	return 0;
+} 
